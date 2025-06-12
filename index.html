@@ -2,13 +2,20 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Airport Style Notice Board</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <!-- UPDATED: Browser Tab Title -->
+    <title>Sulei's Flipple Flopple Board</title>
+
+    <!-- NEW: iOS Home Screen App Settings -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Flipple">
+    <link rel="apple-touch-icon" href="https://placehold.co/180x180/0d0d0d/e5e5e5?text=F">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/vue@3.4.27/dist/vue.global.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <!-- UPDATED: New font for a more authentic look -->
     <link href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@600&family=Roboto+Mono:wght@500&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -20,7 +27,6 @@
             --border-color: #222;
             --flap-background: #1c1c1c;
             --flipper-background: #2a2a2a;
-            /* UPDATED: Faster animation speed */
             --animation-speed: 0.04s;
         }
 
@@ -32,7 +38,6 @@
             width: 100%;
             background-color: var(--background-color);
             color: var(--flap-color);
-            /* UPDATED: New font family */
             font-family: 'Archivo Narrow', 'Roboto Mono', sans-serif;
             display: flex;
             align-items: center;
@@ -62,7 +67,6 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
             display: flex;
             flex-direction: column;
-            /* UPDATED: Row spacing */
             gap: 0.75rem; 
         }
 
@@ -76,15 +80,13 @@
             display: flex;
         }
 
-        /* NEW: Wrapper for flap + notch + stacked effect */
+        /* Wrapper for flap + notch + stacked effect */
         .flap-wrapper {
             position: relative;
-            padding-top: 5px; /* Space for the notch */
-            /* Add padding at bottom to make space for stacked tiles */
+            padding-top: 5px; 
             padding-bottom: 6px;
         }
         
-        /* NEW: Triangular notch above the flap */
         .flap-wrapper::before {
             content: '';
             position: absolute;
@@ -98,7 +100,6 @@
             border-top: 5px solid var(--border-color);
         }
 
-        /* NEW: Stacked tile effect */
         .flap-wrapper::after {
             content: '';
             position: absolute;
@@ -113,10 +114,9 @@
             box-shadow: 0 2px 2px rgba(0,0,0,0.5);
         }
         
-        /* UPDATED: The Split-Flap Character Component Styling */
         .flap {
             position: relative;
-            z-index: 1; /* Ensure main flap is on top of stacked effect */
+            z-index: 1; 
             width: var(--flap-size);
             height: var(--flap-size);
             font-size: var(--flap-font-size);
@@ -126,10 +126,8 @@
             text-transform: uppercase;
             color: var(--flap-color);
             background-color: var(--flap-background);
-            border-radius: 6px; /* Slightly more rounded */
-            /* UPDATED: Inset shadow for 3D effect */
+            border-radius: 6px; 
             box-shadow: inset 0 -2px 2px rgba(0,0,0,0.5), inset 0 2px 2px rgba(255,255,255,0.1);
-            /* UPDATED: Spacing between characters */
             margin: 0 4px;
         }
 
@@ -170,7 +168,6 @@
             transform: rotateX(0deg);
             height: 50%;
             overflow: hidden;
-            /* UPDATED: Thicker, lighter line for physical gap */
             border-bottom: 2px solid #000;
         }
 
@@ -195,7 +192,6 @@
             transition-delay: calc(var(--animation-speed) - 0.01s);
         }
         
-        /* Refresh button styling */
         .refresh-button {
             background-color: #4f46e5;
             color: white;
@@ -214,34 +210,20 @@
             background-color: #4338ca;
         }
         
-        /* Responsive adjustments */
         @media (max-width: 1024px) {
-            :root {
-                --flap-size: 2rem;
-                --flap-font-size: 1.5rem;
-            }
+            :root { --flap-size: 2rem; --flap-font-size: 1.5rem; }
              #app { padding: 1rem; gap: 1.5rem; }
         }
         @media (max-width: 768px) {
-             :root {
-                --flap-size: 1.5rem;
-                --flap-font-size: 1.1rem;
-            }
+             :root { --flap-size: 1.5rem; --flap-font-size: 1.1rem; }
             .board { padding: 1rem; }
             #app { padding: 1rem; gap: 1rem; }
         }
          @media (max-width: 640px) {
-            :root {
-                --flap-size: 1.1rem;
-                --flap-font-size: 0.8rem;
-            }
+            :root { --flap-size: 1.1rem; --flap-font-size: 0.8rem; }
              #app { padding: 0.5rem; }
              .board { padding: 0.5rem; }
-             .flap-wrapper::before {
-                 border-left-width: 4px;
-                 border-right-width: 4px;
-                 border-top-width: 4px;
-             }
+             .flap-wrapper::before { border-left-width: 4px; border-right-width: 4px; border-top-width: 4px; }
          }
     </style>
 </head>
@@ -284,7 +266,6 @@
         }
     }
 
-    // --- SplitFlapChar Component ---
     const SplitFlapChar = {
         props: { char: String, runAnimation: Boolean },
         setup(props) {
@@ -322,6 +303,7 @@
             }, { immediate: true });
             return { currentChar, previousChar, isFlipping };
         },
+        // **CORRECTED TEMPLATE**
         template: `
             <div class="flap">
                 <span class="base-char">{{ currentChar }}</span>
@@ -337,7 +319,6 @@
         `
     };
 
-    // --- SplitFlapText Component ---
     const SplitFlapText = {
         components: { SplitFlapChar },
         props: { text: String, width: Number, runAnimation: Boolean },
@@ -353,7 +334,6 @@
         `
     };
 
-    // --- Main Vue App ---
     const app = createApp({
         components: { SplitFlapText },
         setup() {
