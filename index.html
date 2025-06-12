@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <!-- UPDATED: New font for a more authentic look -->
-    <link href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@600&family=Roboto+Mono:wght@500&display=swap" rel="stylesheet">
     <style>
         :root {
             --flap-size: 3rem;
@@ -76,10 +76,12 @@
             display: flex;
         }
 
-        /* NEW: Wrapper for flap + notch */
+        /* NEW: Wrapper for flap + notch + stacked effect */
         .flap-wrapper {
             position: relative;
             padding-top: 5px; /* Space for the notch */
+            /* Add padding at bottom to make space for stacked tiles */
+            padding-bottom: 6px;
         }
         
         /* NEW: Triangular notch above the flap */
@@ -95,10 +97,26 @@
             border-right: 6px solid transparent;
             border-top: 5px solid var(--border-color);
         }
+
+        /* NEW: Stacked tile effect */
+        .flap-wrapper::after {
+            content: '';
+            position: absolute;
+            left: 4px;
+            right: 4px;
+            top: 5px;
+            bottom: 0;
+            background: #111;
+            border-radius: 6px;
+            transform: translateY(2px);
+            z-index: 0;
+            box-shadow: 0 2px 2px rgba(0,0,0,0.5);
+        }
         
         /* UPDATED: The Split-Flap Character Component Styling */
         .flap {
             position: relative;
+            z-index: 1; /* Ensure main flap is on top of stacked effect */
             width: var(--flap-size);
             height: var(--flap-size);
             font-size: var(--flap-font-size);
@@ -108,7 +126,7 @@
             text-transform: uppercase;
             color: var(--flap-color);
             background-color: var(--flap-background);
-            border-radius: 4px;
+            border-radius: 6px; /* Slightly more rounded */
             /* UPDATED: Inset shadow for 3D effect */
             box-shadow: inset 0 -2px 2px rgba(0,0,0,0.5), inset 0 2px 2px rgba(255,255,255,0.1);
             /* UPDATED: Spacing between characters */
@@ -144,7 +162,7 @@
             -webkit-backface-visibility: hidden;
             transition: transform var(--animation-speed) ease-in-out;
             background-color: var(--flipper-background);
-            border-radius: 4px;
+            border-radius: 6px;
         }
         
         .flipper-top {
@@ -231,6 +249,8 @@
 
 <div id="app">
     <div class="board">
+        <h1 class="text-2xl font-semibold text-gray-600 tracking-widest uppercase text-center pb-4" style="font-family: 'Roboto Mono', monospace;">Sulei's Flipple Flopple Board</h1>
+        
         <div class="text-row" v-for="(line, index) in textLines" :key="index">
             <split-flap-text :text="line.text" :width="boardWidth" :run-animation="line.animate" />
         </div>
@@ -324,7 +344,6 @@
         computed: {
             paddedChars() { return padText(this.text, this.width).split(''); }
         },
-        // UPDATED: Added wrapper for notch styling
         template: `
             <div class="text-container">
                 <div class="flap-wrapper" v-for="(char, index) in paddedChars" :key="index">
@@ -383,7 +402,6 @@
                     if (!flapSizeStr || !fontSizeStr) return;
                     const remInPx = parseFloat(fontSizeStr);
                     const flapWidthInPx = parseFloat(flapSizeStr) * remInPx;
-                    // UPDATED: Increased margin
                     const flapMarginInPx = 8; 
                     const totalFlapWidth = flapWidthInPx + flapMarginInPx;
                     const boardStyle = getComputedStyle(boardEl);
