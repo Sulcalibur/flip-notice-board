@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Airport Style Notice Board</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/vue@3.4.27/dist/vue.global.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -17,8 +18,7 @@
             --board-color: #0d0d0d;
             --border-color: #333;
             --shadow-color: #000;
-            /* Faster animation for individual character flips */
-            --animation-speed: 0.08s;
+            --animation-speed: 0.04s;
         }
 
         /* Base styles */
@@ -36,14 +36,16 @@
             overflow: hidden;
         }
 
+        /* UPDATED: Removed max-width for full-screen layout */
         #app {
             width: 100%;
-            max-width: 1400px;
+            height: 100%;
             padding: 2rem;
             box-sizing: border-box;
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: center;
             gap: 2rem;
         }
 
@@ -160,6 +162,7 @@
             cursor: pointer;
             transition: background-color 0.2s, transform 0.2s;
             box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4);
+            flex-shrink: 0; /* Prevent button from shrinking */
         }
         
         .refresh-button:hover {
@@ -178,6 +181,7 @@
             }
              #app {
                 padding: 1rem;
+                gap: 1.5rem;
             }
         }
         
@@ -188,6 +192,10 @@
             }
             .board {
                 padding: 1rem;
+            }
+             #app {
+                padding: 1rem;
+                 gap: 1rem;
             }
         }
          @media (max-width: 640px) {
@@ -217,36 +225,33 @@
 </div>
 
 <script>
-    const { createApp, ref, reactive, onMounted, watch, computed, nextTick } = Vue;
+    const { createApp, ref, reactive, onMounted, watch, nextTick } = Vue;
     
-    const CHAR_SET = ' ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.,?!'.split('');
-    async function fetchRandomQuote() {
-  try {
-    const response = await fetch('https://api.quotable.io/random');
-    if (!response.ok) {
-      throw new Error('Failed to fetch quote');
-    }
-    const data = await response.json();
-    return {
-      quote: data.content.toUpperCase(),
-      author: data.author
-    };
-  } catch (error) {
-    console.error('Error fetching quote:', error);
-    return {
-      quote: 'THE WILL OF MAN IS HIS HAPPINESS.',
-      author: 'FRIEDRICH SCHILLER'
-    };
-  }
-}
-
-const phrases = [];
+    const CHAR_SET = ' ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.,?!"\'()[]{}:;-/\\@#$%^&*_=+<>|~'.split('');
+    const FALLBACK_QUOTES = [
+        "THE ONLY WAY TO DO GREAT WORK IS TO LOVE WHAT YOU DO.",
+        "SUCCESS IS NOT FINAL, FAILURE IS NOT FATAL: IT IS THE COURAGE TO CONTINUE THAT COUNTS.",
+        "BELIEVE YOU CAN AND YOU'RE HALFWAY THERE.",
+        "THE FUTURE BELONGS TO THOSE WHO BELIEVE IN THE BEAUTY OF THEIR DREAMS.",
+        "WHAT YOU GET BY ACHIEVING YOUR GOALS IS NOT AS IMPORTANT AS WHAT YOU BECOME BY ACHIEVING YOUR GOALS."
+    ];
 
     const getRandom = (arr) => arr[Math.floor(Math.random() * arr.length)];
-    const getRandomNumber = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
     const padText = (text, len) => String(text).toUpperCase().padEnd(len, ' ');
-    
-    // --- SplitFlapChar Component (RE-ENGINEERED LOGIC) ---
+
+    async function fetchRandomQuote() {
+        try {
+            const response = await fetch('https://api.quotable.io/random?minLength=100&maxLength=200');
+            if (!response.ok) throw new Error('API response not OK');
+            const data = await response.json();
+            return data.content;
+        } catch (error) {
+            console.warn('Could not fetch quote from API, using fallback.', error);
+            return getRandom(FALLBACK_QUOTES);
+        }
+    }
+
+    // --- SplitFlapChar Component (No changes needed) ---
     const SplitFlapChar = {
         props: {
             char: String,
@@ -260,13 +265,11 @@ const phrases = [];
 
             watch(() => props.char, (newValRaw) => {
                 const newVal = newValRaw.toUpperCase();
-
-                // 1. Immediately stop any ongoing animation for this character.
                 clearTimeout(animationTimeout.value);
 
-                // If no change or no animation requested, just set the character.
                 if (newVal === currentChar.value || !props.runAnimation) {
                     currentChar.value = newVal;
+                    isFlipping.value = false;
                     return;
                 }
 
@@ -279,32 +282,25 @@ const phrases = [];
                     return; 
                 }
                 
-                // 2. Use a recursive setTimeout loop for a more robust animation.
                 function flipStep() {
                     isFlipping.value = false;
                     nextTick(() => {
-                        // Play flip sound
-                        const audio = new Audio('flip_sounddd.mp3');
-                        audio.volume = 0.1;
-                        audio.play();
-                        
                         previousChar.value = CHAR_SET[currentIndex];
                         currentIndex = (currentIndex + 1) % CHAR_SET.length;
                         currentChar.value = CHAR_SET[currentIndex];
                         isFlipping.value = true;
                         
                         if (currentIndex !== targetIndex) {
-                            animationTimeout.value = setTimeout(flipStep, 90);
+                            animationTimeout.value = setTimeout(flipStep, 45);
                         } else {
                             animationTimeout.value = setTimeout(() => {
                                 isFlipping.value = false;
-                            }, 90);
+                            }, 45);
                         }
                     });
                 }
-
                 flipStep();
-            });
+            }, { immediate: true });
 
             return { currentChar, previousChar, isFlipping };
         },
@@ -323,7 +319,7 @@ const phrases = [];
         `
     };
 
-    // --- SplitFlapText Component ---
+    // --- SplitFlapText Component (No changes needed) ---
     const SplitFlapText = {
         components: { SplitFlapChar },
         props: {
@@ -349,38 +345,47 @@ const phrases = [];
         setup() {
             const textLines = reactive([]);
             const boardWidth = ref(30);
-            const numRows = 14;
+            const numRows = 8;
             
-            const generateLine = async () => {
-  const quoteData = await fetchRandomQuote();
-  return quoteData.quote;
-};
+            // **NEW**: Logic to wrap a quote across multiple lines
+            const displayQuote = (quote, animate) => {
+                const words = quote.split(/\s+/);
+                const newLines = [];
+                let currentLine = '';
+
+                for (const word of words) {
+                    if ((currentLine + ' ' + word).trim().length > boardWidth.value) {
+                        newLines.push(currentLine.trim());
+                        currentLine = word;
+                    } else {
+                        currentLine = (currentLine + ' ' + word).trim();
+                    }
+                }
+                if (currentLine) {
+                    newLines.push(currentLine);
+                }
+
+                // Clear the board and center the new quote vertically
+                const totalLines = numRows;
+                const quoteLines = newLines.length;
+                const paddingTop = Math.floor((totalLines - quoteLines) / 2);
+
+                const finalLines = Array(totalLines).fill('').map((_, i) => {
+                    const lineIndex = i - paddingTop;
+                    if (lineIndex >= 0 && lineIndex < quoteLines) {
+                        return { text: newLines[lineIndex], animate: animate };
+                    }
+                    return { text: '', animate: animate };
+                });
+                
+                // Reactively update the entire array
+                textLines.splice(0, textLines.length, ...finalLines);
+            };
 
             const updateText = async () => {
-   const quoteData = await fetchRandomQuote();
-   const words = quoteData.quote.split(' ');
-   let currentLine = '';
-   textLines = Array(14).fill(''); // Clear all lines
-   
-   // Start displaying quote in the middle of the board
-   let lineIndex = Math.floor(textLines.length / 2);
-   
-   // Distribute words across lines with wrapping
-   for (const word of words) {
-     if ((currentLine + word).length > boardWidth) {
-       textLines[lineIndex] = currentLine.trim();
-       lineIndex++;
-       currentLine = '';
-       // Stop if we've filled all lines
-       if (lineIndex >= textLines.length) break;
-     }
-     currentLine += word + ' ';
-   }
-   // Add remaining words if there's space
-   if (lineIndex < textLines.length) {
-     textLines[lineIndex] = currentLine.trim();
-   }
- };
+                const quote = await fetchRandomQuote();
+                displayQuote(quote, true);
+            };
             
             const calculateBoardWidth = () => {
                  try {
@@ -398,7 +403,15 @@ const phrases = [];
                     const boardPaddingX = parseFloat(boardStyle.paddingLeft) + parseFloat(boardStyle.paddingRight);
                     const availableWidth = boardEl.clientWidth - boardPaddingX;
                     if (totalFlapWidth > 0 && availableWidth > 0) {
-                        boardWidth.value = Math.floor(availableWidth / totalFlapWidth);
+                        const newWidth = Math.floor(availableWidth / totalFlapWidth);
+                        if(newWidth !== boardWidth.value) {
+                             boardWidth.value = newWidth;
+                             // Re-display the current text with the new width
+                             const currentText = textLines.map(l => l.text).join(' ').trim();
+                             if (currentText) {
+                                 displayQuote(currentText, false);
+                             }
+                        }
                     }
                  } catch (e) {
                      console.error("Error calculating board width:", e);
@@ -406,16 +419,12 @@ const phrases = [];
             };
             
             const initializeBoard = async () => {
-                for (let i = 0; i < numRows; i++) {
-                   textLines.push({
-                       text: await generateLine(),
-                       animate: false // No animation on first load
-                   });
-                }
+                const quote = await fetchRandomQuote();
+                displayQuote(quote, false);
             };
 
-            onMounted(() => {
-                initializeBoard();
+            onMounted(async () => {
+                await initializeBoard();
                 setTimeout(() => {
                     calculateBoardWidth();
                     window.addEventListener('resize', calculateBoardWidth);
@@ -427,7 +436,6 @@ const phrases = [];
     });
     
     app.mount('#app');
-
 </script>
 </body>
 </html>
